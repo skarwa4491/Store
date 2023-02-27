@@ -4,8 +4,8 @@ from resources.Schemas import ItemSchema,ItemUpdateSchema
 from db import db
 from models import ItemModel
 from sqlalchemy.exc import SQLAlchemyError
-
-blp = Blueprint("items" , __name__)
+from flask_jwt_extended import jwt_required , get_jwt
+blp = Blueprint("items" , __name__ , description="operation on items")
 
 @blp.route("/item/<string:item_id>")
 class Items(MethodView):
@@ -14,8 +14,14 @@ class Items(MethodView):
     def get(self,item_id):
         return ItemModel.query.get_or_404(item_id)
 
+    @jwt_required()
     def delete(self,item_id):
+        jwt = get_jwt()
+        if not jwt.get("is_admin"):
+            abort(401, message="admin privilege required")
         item = ItemModel.query.get(item_id)
+        if not item :
+            return {'message': 'Item you are trying to delete is not present'}
         db.session.delete(item)
         db.session.commit()
         return {"message" : "item deleted successfully"}
@@ -45,6 +51,7 @@ class ItemList(MethodView):
     def get(self):
         return ItemModel.query.all()
 
+    @jwt_required() # pass header authorization : Bearer <access token>
     @blp.arguments(ItemSchema)
     @blp.response(200 , ItemSchema)
     def post(self,item_data):

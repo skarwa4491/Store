@@ -5,7 +5,7 @@ from db import db
 from models import ItemModel , StoreModel , TagModel
 from sqlalchemy.exc import SQLAlchemyError
 
-blp = Blueprint("tags" , __name__)
+blp = Blueprint("tags" , __name__ , description = 'operation on tags')
 
 @blp.route("/store/<string:store_id>/tag")
 class Tags(MethodView):
